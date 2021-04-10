@@ -1686,7 +1686,8 @@ function convertToWeight() {
     'fluid oz': 'fluid ounce',
     'fl oz': 'fluid ounce',
   };
-  const fractionValues = {
+
+  const fractionValues = { // TODO: use the reverse dictionary (swap entries and keys) to convert to fractions!
     '¼': 1/4,
     '½': 1/2,
     '¾': 3/4,
