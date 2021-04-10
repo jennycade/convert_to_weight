@@ -1686,6 +1686,26 @@ function convertToWeight() {
     'fluid oz': 'fluid ounce',
     'fl oz': 'fluid ounce',
   };
+  const fractionValues = {
+    '¼': 1/4,
+    '½': 1/2,
+    '¾': 3/4,
+    '⅓': 1/3,
+    '⅔': 2/3,
+    '⅕': 1/5,
+    '⅖': 2/5,
+    '⅗': 3/5,
+    '⅘': 4/5,
+    '⅙': 1/6,
+    '⅚': 5/6,
+    '⅛': 1/8,
+    '⅜': 3/8,
+    '⅝': 5/8,
+    '⅞': 7/8,
+    '⅐': 1/7,
+    '⅑': 1/9,
+    '⅒': 1/10,
+  };
 
   // helper functions
   function convertVolume(amount, startUnit, targetUnit) {
@@ -1746,34 +1766,42 @@ function convertToWeight() {
 
   function fractionToDecimal(str) {
     anyNumber = new RegExp(/\d/, 'm');
+    
     if (str.match(anyNumber)) {
-      const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?$/, 'gm');
+
+      if (str.includes('/')) {
+        const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?$/, 'gm');
+        
+        let parts = fractionPattern.exec(str)['groups'];
+        console.table(parts);
+
+        for (const key in parts) {
+          // TODO: figure out why this seems like it shouldn't work (but it does?)
+          parts[key] = parseInt(parts[key]);
+        }
+
+        let result = 0;
+        if (parts['integer']) {
+          result += parts['integer'];
+        }
+        if (parts['numerator'] && parts['denominator']) {
+          result += (parts['numerator'] / parts['denominator']);
+        }
+
+        return result;
+      } else { // no slashes -- but check for fraction character! (TODO)
+        return parseInt(str);
+      }
+
       
-      let parts = fractionPattern.exec(str)['groups']
-
-      for (const key in parts) {
-        // TODO: figure out why this seems like it shouldn't work (but it does?)
-        parts[key] = parseInt(parts[key]);
-        console.log(`${key}: ${parts[key]}`);
-        console.log(typeof parts[key]);
-      }
-
-      console.table(parts);
-
-      let result = 0;
-      if (parts['integer']) {
-        result += parts['integer'];
-        console.log('adding integer');
-      }
-      if (parts['numerator'] && parts['denominator']) {
-        result += (parts['numerator'] / parts['denominator']);
-        console.log('adding fraction');
-      }
-
-      return result;
 
     } else {
-      // check for fraction characters
+      
+
+      if (str in fractionValues) {
+        return fractionValues[str];
+      }
+      
     }
   }
 
@@ -1809,10 +1837,8 @@ function convertToWeight() {
       // see if it's in the weightchart
       if ((ingInfo = findIngredient(array1['groups']['ingredient'])) !== null ) {
 
-        console.table(ingInfo);
-
         // amount
-        let amount = parseFloat(array1['groups']['number']); // TODO: make this work with fractions e.g. 1/2 and ½
+        let amount = fractionToDecimal(array1['groups']['number'].trim());
         let startUnit = array1['groups']['unit'].trim();
         [amount, unit] = convertVolume(amount, startUnit, ingInfo['volumeUnit']);
         let grams = convertToGrams(amount, ingInfo['Grams'], ingInfo['volumeAmount']);
