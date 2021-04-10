@@ -1740,6 +1740,7 @@ function convertToWeight() {
 
   // TODO: strip all non-word characters when searching
   // TODO: figure out why "flavorless oil (canola oil/coconut oil/sunflower oil)" matches "coconut (sweetened, shredded)"
+  // TODO: (this is a big one) allow user to choose from multiple matches
   // TODO: fractions to decimals
   // TODO: decimals to fractions
 
@@ -1748,10 +1749,28 @@ function convertToWeight() {
     if (str.match(anyNumber)) {
       const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?$/, 'gm');
       
-      const parts = fractionPattern.exec(str);
-      // TODO: START HERE!
+      let parts = fractionPattern.exec(str)['groups']
 
-      // result = integer + numerator/denominator
+      for (const key in parts) {
+        // TODO: figure out why this seems like it shouldn't work (but it does?)
+        parts[key] = parseInt(parts[key]);
+        console.log(`${key}: ${parts[key]}`);
+        console.log(typeof parts[key]);
+      }
+
+      console.table(parts);
+
+      let result = 0;
+      if (parts['integer']) {
+        result += parts['integer'];
+        console.log('adding integer');
+      }
+      if (parts['numerator'] && parts['denominator']) {
+        result += (parts['numerator'] / parts['denominator']);
+        console.log('adding fraction');
+      }
+
+      return result;
 
     } else {
       // check for fraction characters
