@@ -1687,6 +1687,8 @@ function convertToWeight() {
     'fl oz': 'fluid ounce',
   };
 
+  // TODO: how does this work for eggs? Does it actually work or does it just fail silently?
+
   const fractionValues = { // TODO: use the reverse dictionary (swap entries and keys) to convert to fractions!
     '¼': 1/4,
     '½': 1/2,
@@ -1762,48 +1764,28 @@ function convertToWeight() {
   // TODO: strip all non-word characters when searching
   // TODO: figure out why "flavorless oil (canola oil/coconut oil/sunflower oil)" matches "coconut (sweetened, shredded)"
   // TODO: (this is a big one) allow user to choose from multiple matches
-  // TODO: fractions to decimals
   // TODO: decimals to fractions
 
   function fractionToDecimal(str) {
-    anyNumber = new RegExp(/\d/, 'm');
-    
-    if (str.match(anyNumber)) {
+    // TODO: fix bug 11/2 --> 0.5
 
-      if (str.includes('/')) {
-        const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?$/, 'gm');
-        
-        let parts = fractionPattern.exec(str)['groups'];
-        console.table(parts);
+    const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
+    let parts = fractionPattern.exec(str)['groups'];
+    console.table(parts);
 
-        for (const key in parts) {
-          // TODO: figure out why this seems like it shouldn't work (but it does?)
-          parts[key] = parseInt(parts[key]);
-        }
+    let result = 0;
 
-        let result = 0;
-        if (parts['integer']) {
-          result += parts['integer'];
-        }
-        if (parts['numerator'] && parts['denominator']) {
-          result += (parts['numerator'] / parts['denominator']);
-        }
-
-        return result;
-      } else { // no slashes -- but check for fraction character! (TODO)
-        return parseInt(str);
-      }
-
-      
-
-    } else {
-      
-
-      if (str in fractionValues) {
-        return fractionValues[str];
-      }
-      
+    if (parts['integer']) {
+      result += parseInt(parts['integer']);
     }
+    if (parts['numerator'] && parts['denominator']) {
+      result += (parseInt(parts['numerator']) / parseInt(parts['denominator']));
+    }
+    if (parts['vulgar']) {
+      result += fractionValues[parts['vulgar']];
+    }
+
+    return result;
   }
 
   // find the ingredients and highlight them
