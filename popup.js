@@ -1764,16 +1764,19 @@ function convertToWeight() {
   // TODO: strip all non-word characters when searching
   // TODO: figure out why "flavorless oil (canola oil/coconut oil/sunflower oil)" matches "coconut (sweetened, shredded)"
   // TODO: (this is a big one) allow user to choose from multiple matches
-  // TODO: decimals to fractions
 
-  function fractionToDecimal(str) {
+  function amountToNumber(str) {
     // TODO: fix bug 11/2 --> 0.5
 
-    const fractionPattern = new RegExp(/^(?<integer>\d+)? ?((?<numerator>\d)\/(?<denominator>\d))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
+    const fractionPattern = new RegExp(/^(?<decimal>\d*\.\d+)?(?<integer>\d+)? ?((?<numerator>\d+)\/(?<denominator>\d+))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
     let parts = fractionPattern.exec(str)['groups'];
     console.table(parts);
 
     let result = 0;
+
+    if (parts['decimal']) {
+      return parseFloat(parts['decimal']);
+    }
 
     if (parts['integer']) {
       result += parseInt(parts['integer']);
@@ -1810,6 +1813,7 @@ function convertToWeight() {
   // grab the ingredients
   for (const listItem of listItems) {
 
+    // TODO: make ingpattern work for all number formats
     const ingpattern = new RegExp(/(?<number>(^\d\/\d )|(^\d+ \d\/\d )|(^\d+ ))(?<unit>\w+) (?<ingredient>.*)$/, 'gm')
     let array1;
 
@@ -1821,7 +1825,7 @@ function convertToWeight() {
       if ((ingInfo = findIngredient(array1['groups']['ingredient'])) !== null ) {
 
         // amount
-        let amount = fractionToDecimal(array1['groups']['number'].trim());
+        let amount = amountToNumber(array1['groups']['number'].trim());
         let startUnit = array1['groups']['unit'].trim();
         [amount, unit] = convertVolume(amount, startUnit, ingInfo['volumeUnit']);
         let grams = convertToGrams(amount, ingInfo['Grams'], ingInfo['volumeAmount']);
