@@ -1768,27 +1768,47 @@ function convertToWeight() {
   function amountToNumber(str) {
     // TODO: fix bug 11/2 --> 0.5
 
-    const fractionPattern = new RegExp(/^(?<decimal>\d*\.\d+)?(?<integer>\d+)? ?((?<numerator>\d+)\/(?<denominator>\d+))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
-    let parts = fractionPattern.exec(str)['groups'];
-    console.table(parts);
-
-    let result = 0;
-
-    if (parts['decimal']) {
-      return parseFloat(parts['decimal']);
+    const integerPattern = new RegExp(/^(?<integer>^\d+)$/, 'gm');
+    const decimalPattern = new RegExp(/^(?<decimal>\d*\.\d+)/, 'gm');
+    const vulgarPattern = new RegExp(/^(?<integer>\d+)? ?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])$/, 'gm');
+    const fractionPattern = new RegExp(/^((?<integer>\d+)? )?((?<numerator>\d+)\/(?<denominator>\d+))$/, 'gm');
+    
+    const integerParts = integerPattern.exec(str);
+    if (integerParts) {
+      return parseInt(integerParts['groups']['integer']);
     }
 
-    if (parts['integer']) {
-      result += parseInt(parts['integer']);
+    const decimalParts = decimalPattern.exec(str);
+    if (decimalParts) {
+      return parseFloat(decimalParts['groups']['decimal']);
     }
-    if (parts['numerator'] && parts['denominator']) {
-      result += (parseInt(parts['numerator']) / parseInt(parts['denominator']));
+    
+
+    const fractionParts = fractionPattern.exec(str);
+    if (fractionParts) {
+      let result = 0;
+      if (fractionParts['groups']['integer']) {
+        result += parseInt(fractionParts['groups']['integer']);
+      }
+      if (fractionParts['groups']['numerator'] && fractionParts['groups']['denominator']) {
+        result += (parseInt(fractionParts['groups']['numerator']) / parseInt(fractionParts['groups']['denominator']));
+        return result;
+      }
     }
-    if (parts['vulgar']) {
-      result += fractionValues[parts['vulgar']];
+    
+    const vulgarParts = vulgarPattern.exec(str);
+    if (vulgarParts) {
+      let result = 0;
+
+      if (vulgarParts['groups']['integer']) {
+        result += parseInt(vulgarParts['groups']['integer']);
+      }
+      if (vulgarParts['groups']['vulgar']) {
+        result += fractionValues[vulgarParts['groups']['vulgar']];
+        return result;
+      }
     }
 
-    return result;
   }
 
   // find the ingredients and highlight them
