@@ -1773,6 +1773,7 @@ function convertToWeight() {
     const vulgarPattern = new RegExp(/^(?<integer>\d+)? ?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])$/, 'gm');
     const fractionPattern = new RegExp(/^((?<integer>\d+)? )?((?<numerator>\d+)\/(?<denominator>\d+))$/, 'gm');
     
+    // TODO: Consider moving the regex down so they don't all get run every time (not sure if it matters, but maybe better performance?)
     const integerParts = integerPattern.exec(str);
     if (integerParts) {
       return parseInt(integerParts['groups']['integer']);
@@ -1809,6 +1810,8 @@ function convertToWeight() {
       }
     }
 
+    // TODO: return an error if you get this far, don't just fail silently!
+
   }
 
   // find the ingredients and highlight them
@@ -1816,15 +1819,8 @@ function convertToWeight() {
 
   let ingredients = [];
 
-  patterns = [
-    '/^\d+/gm', // starts with number   e.g. 34
-    '/^\d+ \d\/\d/gm', // mixed fraction e.g. 1 1/2
-    '/^\d\/\d/gm' // starts with fraction e.g. 3/4
-  ];
-  // const regex = new RegExp(/^\d+/gm);
-  // const regex = new RegExp(/(?<number>(^\d\/\d )|(^\d+ \d\/\d )|(^\d+ ))(?<unit>\w+) (?<ingredient>.*)$/, 'gm');
-  // TODO: need to add fraction characters e.g. ½
-  // TODO: add decimals
+  const amountPattern = new RegExp(/^(?<decimal>\d*\.\d+)?(?<integer>\d+)? ?((?<numerator>\d+)\/(?<denominator>\d+))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
+
   // TODO: add range? '## to ##' or '##–##'
 
   // TODO: ingredients aren't always the textContent of an li. Try searching all text for ^^ where unit is a volume unit instead?
@@ -1834,7 +1830,7 @@ function convertToWeight() {
   for (const listItem of listItems) {
 
     // TODO: make ingpattern work for all number formats
-    const ingpattern = new RegExp(/(?<number>(^\d\/\d )|(^\d+ \d\/\d )|(^\d+ ))(?<unit>\w+) (?<ingredient>.*)$/, 'gm')
+    const ingpattern = new RegExp(/^(?<amount>(?:[\d\.]+)? ?(?:\d\/\d)?[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒]?) (?<unit>\w+) (?<ingredient>.*)$/, 'gm')
     let array1;
 
     // does it match the pattern?
@@ -1845,7 +1841,7 @@ function convertToWeight() {
       if ((ingInfo = findIngredient(array1['groups']['ingredient'])) !== null ) {
 
         // amount
-        let amount = amountToNumber(array1['groups']['number'].trim());
+        let amount = amountToNumber(array1['groups']['amount'].trim());
         let startUnit = array1['groups']['unit'].trim();
         [amount, unit] = convertVolume(amount, startUnit, ingInfo['volumeUnit']);
         let grams = convertToGrams(amount, ingInfo['Grams'], ingInfo['volumeAmount']);
