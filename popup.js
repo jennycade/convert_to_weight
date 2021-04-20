@@ -1690,24 +1690,24 @@ function convertToWeight() {
   // TODO: how does this work for eggs? Does it actually work or does it just fail silently?
 
   const fractionValues = { // TODO: use the reverse dictionary (swap entries and keys) to convert to fractions!
-    '¼': 1/4,
-    '½': 1/2,
-    '¾': 3/4,
-    '⅓': 1/3,
-    '⅔': 2/3,
-    '⅕': 1/5,
-    '⅖': 2/5,
-    '⅗': 3/5,
-    '⅘': 4/5,
-    '⅙': 1/6,
-    '⅚': 5/6,
-    '⅛': 1/8,
-    '⅜': 3/8,
-    '⅝': 5/8,
-    '⅞': 7/8,
-    '⅐': 1/7,
-    '⅑': 1/9,
-    '⅒': 1/10,
+    188: 1/4,
+    189: 1/2,
+    190: 3/4,
+    8531: 1/3,
+    8532: 2/3,
+    8533: 1/5,
+    8534: 2/5,
+    8535: 3/5,
+    8536: 4/5,
+    8537: 1/6,
+    8538: 5/6,
+    8539: 1/8,
+    8540: 3/8,
+    8541: 5/8,
+    8542: 7/8,
+    8528: 1/7,
+    8529: 1/9,
+    8530: 1/10,
   };
 
   // helper functions
@@ -1805,7 +1805,9 @@ function convertToWeight() {
         result += parseInt(vulgarParts['groups']['integer']);
       }
       if (vulgarParts['groups']['vulgar']) {
-        result += fractionValues[vulgarParts['groups']['vulgar']];
+        // look up with unicode
+        let code = vulgarParts['groups']['vulgar'].charCodeAt(0);
+        result += fractionValues[code];
         return result;
       }
     }
@@ -1829,7 +1831,7 @@ function convertToWeight() {
   // grab the ingredients
   for (const listItem of listItems) {
 
-    // TODO: make ingpattern work for all number formats
+    // TODO: Why is vulgar 1/4 not working in test recipe?
     const ingpattern = new RegExp(/^(?<amount>(?:[\d\.]+)? ?(?:\d\/\d)?[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒]?) (?<unit>\w+) (?<ingredient>.*)$/, 'gm')
     let array1;
 
