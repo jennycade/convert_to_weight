@@ -1738,18 +1738,87 @@ function convertToWeight() {
     return amount/volAmount * gramsPerVol;
   }
 
-  function findIngredient(recipeIngredient) {
-    // find ingredient
-    // TODO all kinds of ways to improve this, I'm sure
-    // first attempt, which I'm sure will be slow: convert if a key from weightchart contains a partial match
+  function splitIntoWords(str) {
+    const regexp = /\w+/g;
 
-    // iterate through weightchart
-    for (ing in weightchart) {
-      if (recipeIngredient.toLowerCase().indexOf(removeParenthetical(ing)) !== -1) {
-        return {ing, ...weightchart[ing]};
+    const array = [...str.matchAll(regexp)];
+    const result = array.map(x => x[0].toLowerCase());
+
+    return result;
+  }
+
+  function returnMaxEntry (obj) {
+    // iterates through object entries and returns the key/value pair with the highest value.
+    // If more than one entry has the same highest value it returns the first one it evaluates.
+    let max = ['none', -Infinity];
+    for (const [key, value] of Object.entries(obj)) {
+      if (value > max[1]) {
+        // it's the new max
+        max = [key, value];
+        // console.log(`The max so far is ${key}: ${value}`);
       }
     }
-    return null;
+    if (max[1] > -Infinity) {
+      return max;
+    }
+    // TODO: check if I want this to silently fail.
+  }
+
+  function isEmpty(obj) {
+    for(var i in obj) return false; 
+    return true;
+  }
+
+  function findIngredient(recipeIngredient) {
+
+    // iterate through weightchart
+    for (const chartIngredient in weightchart) {
+      // first look for an exact match
+      if (chartIngredient === recipeIngredient) {
+        return {chartIngredient, ...weightchart[chartIngredient]};
+      }
+    }
+
+    // no exact match, so look for matching words
+    const recipeWords = splitIntoWords(recipeIngredient);
+
+    const matches = {};
+
+    
+
+    for (const chartIngredient in weightchart) {
+      const chartWords = splitIntoWords(chartIngredient) // TODO: add this to the chart itself, there's no need to do it over and over.
+
+      // TODO: change this to a reduce function? Or something like that?
+
+      // count the number of times words match
+      const tally = recipeWords.filter(word => chartWords.includes(word)).length;
+      if (tally > 0) {
+        // add to matches
+        matches[chartIngredient] = tally;
+      }
+
+      // let tally = 0;
+      // for (recipeWord in recipeWords) { // recipeWord is the key: 0, 1, 2, ... I want the word itself! TODO
+      //   console.log(`Searching for the word ${recipeWords[recipeWord]}`);
+      //   if (recipeWords[recipeWord].toLowerCase() in chartWords) {
+      //     tally += 1;
+      //   }
+      // }
+      // if (tally >= 1) {
+      //   matches[chartIngredient] = tally;
+      // }
+    }
+    // return matches;
+    // console.table(matches);
+
+    // best match
+    if (!isEmpty(matches)) {
+      const bestMatch = returnMaxEntry(matches)[0];
+      console.log(`Best match: ${bestMatch}`);
+      return {bestMatch, ...weightchart[bestMatch]};
+    }
+
   }
 
   function removeParenthetical(str) {
@@ -1821,7 +1890,9 @@ function convertToWeight() {
 
   let ingredients = [];
 
+  // TODO: figure out why amountPattern is here and delete if it's not necessary.
   const amountPattern = new RegExp(/^(?<decimal>\d*\.\d+)?(?<integer>\d+)? ?((?<numerator>\d+)\/(?<denominator>\d+))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
+
 
   // TODO: add range? '## to ##' or '##–##'
 
@@ -1831,7 +1902,6 @@ function convertToWeight() {
   // grab the ingredients
   for (const listItem of listItems) {
 
-    // TODO: Why is vulgar 1/4 not working in test recipe?
     const ingpattern = new RegExp(/^(?<amount>(?:[\d\.]+)? ?(?:\d\/\d)?[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒]?) (?<unit>\w+) (?<ingredient>.*)$/, 'gm')
     let array1;
 
@@ -1841,16 +1911,16 @@ function convertToWeight() {
       let ingInfo;
       // see if it's in the weightchart
       if ((ingInfo = findIngredient(array1['groups']['ingredient'])) !== null ) {
+        console.table(ingInfo);
 
         // amount
         let amount = amountToNumber(array1['groups']['amount'].trim());
         let startUnit = array1['groups']['unit'].trim();
         [amount, unit] = convertVolume(amount, startUnit, ingInfo['volumeUnit']);
         let grams = convertToGrams(amount, ingInfo['Grams'], ingInfo['volumeAmount']);
+        const chartIngredient = ingInfo['chartIngredient'] || ingInfo['bestMatch'];
 
-        // split into spans?
-        // <span class="C2Wnumber">##</span>
-        // console.log(listItem);
+        // split into spans
         const numberNode = document.createElement('span');
         numberNode.classList.add('C2Wnumber');
         numberNode.textContent = grams;
@@ -1867,12 +1937,11 @@ function convertToWeight() {
 
         const matchNode = document.createElement('span');
         matchNode.classList.add('C2Wmatch');
-        matchNode.textContent = ` (${ing})`;
+        matchNode.textContent = ` (${chartIngredient})`;
         matchNode.style.fontStyle = 'italic';
         matchNode.style.opacity = '50%';
         
         const originalText = listItem.textContent;
-        // TODO: Store original text for each part
         // TODO: add an eventlistener to toggle between original and g display
         // TODO: make allllllll this shit modular
         // TODO: make a css file to style the different parts
@@ -1886,6 +1955,7 @@ function convertToWeight() {
 
         // TODO: change classList instead (toggle hiding/not)
         // TODO: show conversion information? maybe?
+        // TODO: display calculation on hover?
         // TODO: 'mouseenter' only works after clicking back on the main page.
         //       Switch focus back to document after clicking the button in popup.html?
         listItem.addEventListener('mouseenter', (e) => {
@@ -1900,7 +1970,7 @@ function convertToWeight() {
     }
   }
 
-  console.table(ingredients)
+  // console.table(ingredients);
 }
 
 
