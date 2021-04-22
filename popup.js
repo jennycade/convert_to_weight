@@ -1788,8 +1788,6 @@ function convertToWeight() {
     for (const chartIngredient in weightchart) {
       const chartWords = splitIntoWords(chartIngredient) // TODO: add this to the chart itself, there's no need to do it over and over.
 
-      // TODO: change this to a reduce function? Or something like that?
-
       // count the number of times words match
       const tally = recipeWords.filter(word => chartWords.includes(word)).length;
       if (tally > 0) {
@@ -1815,12 +1813,9 @@ function convertToWeight() {
     }
   }
 
-  // TODO: strip all non-word characters when searching
-  // TODO: figure out why "flavorless oil (canola oil/coconut oil/sunflower oil)" matches "coconut (sweetened, shredded)"
   // TODO: (this is a big one) allow user to choose from multiple matches
 
   function amountToNumber(str) {
-    // TODO: fix bug 11/2 --> 0.5
 
     const integerPattern = new RegExp(/^(?<integer>^\d+)$/, 'gm');
     const decimalPattern = new RegExp(/^(?<decimal>\d*\.\d+)/, 'gm');
