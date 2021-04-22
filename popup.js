@@ -1739,7 +1739,7 @@ function convertToWeight() {
   }
 
   function splitIntoWords(str) {
-    const regexp = /\w+/g;
+    const regexp = /[a-zA-Z]+/g;
 
     const array = [...str.matchAll(regexp)];
     const result = array.map(x => x[0].toLowerCase());
