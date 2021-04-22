@@ -1644,7 +1644,7 @@ function convertToWeight() {
       "Grams": "121 to 150"
     }
   };
-
+  
   const teaspoonEquivalents = {
     'tablespoon': 3,
     'teaspoon': 1,
@@ -1755,7 +1755,6 @@ function convertToWeight() {
       if (value > max[1]) {
         // it's the new max
         max = [key, value];
-        // console.log(`The max so far is ${key}: ${value}`);
       }
     }
     if (max[1] > -Infinity) {
@@ -1797,25 +1796,11 @@ function convertToWeight() {
         // add to matches
         matches[chartIngredient] = tally;
       }
-
-      // let tally = 0;
-      // for (recipeWord in recipeWords) { // recipeWord is the key: 0, 1, 2, ... I want the word itself! TODO
-      //   console.log(`Searching for the word ${recipeWords[recipeWord]}`);
-      //   if (recipeWords[recipeWord].toLowerCase() in chartWords) {
-      //     tally += 1;
-      //   }
-      // }
-      // if (tally >= 1) {
-      //   matches[chartIngredient] = tally;
-      // }
     }
-    // return matches;
-    // console.table(matches);
 
     // best match
     if (!isEmpty(matches)) {
       const bestMatch = returnMaxEntry(matches)[0];
-      console.log(`Best match: ${bestMatch}`);
       return {bestMatch, ...weightchart[bestMatch]};
     }
 
@@ -1887,31 +1872,28 @@ function convertToWeight() {
 
   // find the ingredients and highlight them
   const listItems = document.body.querySelectorAll('li');
+  const spans = document.body.querySelectorAll('span');
 
-  let ingredients = [];
-
-  // TODO: figure out why amountPattern is here and delete if it's not necessary.
-  const amountPattern = new RegExp(/^(?<decimal>\d*\.\d+)?(?<integer>\d+)? ?((?<numerator>\d+)\/(?<denominator>\d+))?(?<vulgar>[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒])?$/, 'gm');
+  const potentialIngredients = [...listItems, ...spans];
 
 
   // TODO: add range? '## to ##' or '##–##'
-
-  // TODO: ingredients aren't always the textContent of an li. Try searching all text for ^^ where unit is a volume unit instead?
+  // TODO: debug on https://sallysbakingaddiction.com/creamy-lemon-pie/#tasty-recipes-67731-jump-target
+  // TODO: debug on https://www.allrecipes.com/recipe/16754/best-peanut-butter-cookies-ever/ (all numbers are NaN. No clue why.)
   
 
   // grab the ingredients
-  for (const listItem of listItems) {
+  for (const listItem of potentialIngredients) {
 
     const ingpattern = new RegExp(/^(?<amount>(?:[\d\.]+)? ?(?:\d\/\d)?[¼½¾⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞⅐⅑⅒]?) (?<unit>\w+) (?<ingredient>.*)$/, 'gm')
     let array1;
 
     // does it match the pattern?
-    if ((array1 = ingpattern.exec(listItem.textContent)) !== null) {
+    if ((array1 = ingpattern.exec(listItem.textContent))) { // used to have !== null and now I can't remember why.
 
       let ingInfo;
       // see if it's in the weightchart
-      if ((ingInfo = findIngredient(array1['groups']['ingredient'])) !== null ) {
-        console.table(ingInfo);
+      if ((ingInfo = findIngredient(array1['groups']['ingredient']))) { // used to have !== null and now I can't remember why.
 
         // amount
         let amount = amountToNumber(array1['groups']['amount'].trim());
@@ -1969,8 +1951,6 @@ function convertToWeight() {
       }
     }
   }
-
-  // console.table(ingredients);
 }
 
 
